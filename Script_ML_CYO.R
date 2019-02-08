@@ -65,6 +65,7 @@ head(rna_seq_train$gene_44, n = 7) # The following code shows how the readings o
 head(rna_seq_train$gene_1838, n =7)
 
 #Plot showing the points and the the five number summary of the readings of gene_1, which may have some predictive power
+# Outliers are values that are further than 1.5 * ICR (Inter-quartile range) from the closest hinge
 rna_seq_train %>% group_by(Class) %>% 
   ggplot(aes(Class,gene_1)) + geom_boxplot (color = "red", fill = "dark red") + 
   xlab(label = "Sample Type") +
@@ -90,21 +91,55 @@ rna_seq_train %>% group_by(Class) %>%
   theme(legend.title.align = 0.5) +
   geom_jitter(alpha = 0.3, color = "dark blue")
 
- 
+# As senn from the plots and the dataset, there is a lot of predictors, where many may not be predictive in any way
+# Therefore a dimensionality reduction method will follow to remove those genes that may not be predictive or 
+# add to the variance of the data much. 
 
+pca_rna_seq_train <- prcomp(x = rna_seq_train[,3:ncol(rna_seq_train)], center = TRUE) # Performs a PCA analysis on all the genes present in the dataset
 
+str(pca_rna_seq_train) # Gives and indication of the structure and values after the pca analysis
+dim(pca_rna_seq_train$rotation) # Dimensions shows the amount of Principal Components, 20531 genes and 638 principal components
 
+pca_rna_seq_train$rotation[1:5,1:7] # Shows the first few PCs
 
+plot(pca_rna_seq_train$x[],pca_rna_seq_train$x[])
 
+pca_var <- pca_rna_seq_train$sdev^2 # Computes the variance of each PC
+pca_var[1:10] # Shows the top 10 PC's variance
 
+# For dimensionality reduction, we are interested in those PC's that inherently explains the most variance in the dataset
+# therefore we should determine a cutoff point for the amount of variance included by the PC's
 
+prop_var <- pca_var/sum(pca_var) # calculates the proportion each PC adds to the total variance
 
+cumsum(prop_var[1:10]) # Shows the variance explained by the first ten PC's
+                      # We already see that the first 10 PC's explain about 55 % of the variance in the dataset
 
+plot(x = 1:length(prop_var), y = cumsum(prop_var), main = "Proportion Of Variance Explained By The Principal Components",
+                                                  xlab = "Principal Component Number",
+                                                  ylab = "Proportion Of Variance" ) # Plot showing how the different Principal components add to the total variance
 
+min(which(cumsum(prop_var) > 0.8)) # The PC number where the total variance explained equals 80%
 
+min(which(cumsum(prop_var) > 0.9)) # The PC number where the total variance explained equals 90%
 
+min(which(cumsum(prop_var) > 0.95)) # The PC number where the total variance explained equals 95 %
 
+ncol(pca_rna_seq_train$rotation) # Shows the total amount of PC's
 
+min(which(cumsum(prop_var) > 0.8))/ncol(pca_rna_seq_train$rotation) # proportion of predictors that explain 80 % of variance
+
+min(which(cumsum(prop_var) > 0.9))/ncol(pca_rna_seq_train$rotation) # proportion of predictors that explain 90% of variance
+
+min(which(cumsum(prop_var) > 0.95))/ncol(pca_rna_seq_train$rotation) # proportion of predictors that explain 95 % of variance
+
+# The cutoff value of the total variance included by the PC's should be carefully decided.
+# We would like to include as much of the predictors as possible, while being effecient in using computer processing power
+# For 90% of the variance explained we reduce the predictors by aprox. a half while
+# for 80 % of the variance explained the predictors reduced to aprox. a fifth 
+
+# For training the ML algorithm, both the 80% and 90 % variance cutoff values will be used and 
+# accuracy measured.
 
 
 
