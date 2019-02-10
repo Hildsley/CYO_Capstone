@@ -1,3 +1,11 @@
+install.packages("devtools")
+install.packages("tidyverse")
+install.packages("caret")
+install.packages("R.utils")
+library(devtools)
+install_github("vqv/ggbiplot")
+
+library(ggbiplot)
 library(tidyverse)
 library(caret)
 library(R.utils)
@@ -100,9 +108,11 @@ pca_rna_seq_train <- prcomp(x = rna_seq_train[,3:ncol(rna_seq_train)], center = 
 str(pca_rna_seq_train) # Gives and indication of the structure and values after the pca analysis
 dim(pca_rna_seq_train$rotation) # Dimensions shows the amount of Principal Components, 20531 genes and 638 principal components
 
-pca_rna_seq_train$rotation[1:5,1:7] # Shows the first few PCs
+pca_rna_seq_train$x[1:5,1:7] # Shows the first few PCs
 
-plot(pca_rna_seq_train$x[],pca_rna_seq_train$x[])
+plot(pca_rna_seq_train$x[,1:2], col=rna_seq_train[,2]) # Plot showing PC1 and PC2 with classes with somewhat good seperation between all the classes
+
+plot(pca_rna_seq_train$x[,2:3], col=rna_seq_train[,2]) # similar plot with PC2 and PC3
 
 pca_var <- pca_rna_seq_train$sdev^2 # Computes the variance of each PC
 pca_var[1:10] # Shows the top 10 PC's variance
@@ -141,9 +151,24 @@ min(which(cumsum(prop_var) > 0.95))/ncol(pca_rna_seq_train$rotation) # proportio
 # For training the ML algorithm, both the 80% and 90 % variance cutoff values will be used and 
 # accuracy measured.
 
+pca_rna_seq_train_80 <- data.frame(pca_rna_seq_train$x[,1:min(which(cumsum(prop_var)> 0.8))]) # Joins the classes of the samples with the respective
+                                                                                                                # PCs after the pca, for the 80% variance PCs.
 
+pca_rna_seq_train_90 <- data.frame(pca_rna_seq_train$x[,1:min(which(cumsum(prop_var) > 0.9))]) # same joining as above for the 90% variance PCs
 
+classes <- as.factor(as.vector(rna_seq_train[,2]))
 
+models <- c("adaboost","amdai","bayesglm","ada","gamboost",
+            "glmboost","rpart","vglmCumulative","bam","gam",
+            "glm","knn","svmLinear3","Ivq","lssvmLinear",
+            "lda","avNNet","naive_bayes","pls","Rborist")
+
+fitControl <- trainControl(method = "cv", number = 5 , p = 0.2)
+
+set.seed(2020)
+fit_pca_80 <- train( x = pca_rna_seq_train_80, y = classes, method = "knn" , trControl = fitControl)
+
+ 
 
 
 
