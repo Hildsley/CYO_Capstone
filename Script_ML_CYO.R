@@ -261,7 +261,7 @@ fit_lda <- train(sample_class ~ . , data = pca_rna_seq_train_80, method = "lda",
 
 pca_rna_seq_val <- predict(pca_rna_seq_train,newdata = rna_seq_val) #Transform validation set into similar pca parameters of the training set
 
-pca_rna_seq_val <- data.frame(pca_rna_seq_val[,1:min(which(cumsum(prop_var)> 0.8))] ) # removes the PC we are not interested in and adds the sample's classes to the data frame
+pca_rna_seq_val <- data.frame(pca_rna_seq_val[,1:min(which(cumsum(prop_var)> 0.8))] ) # removes the PCs we are not interested in and adds the sample's classes to the data frame
 
 pca_rna_seq_val %>% ggplot(aes(x=PC1, y = PC2, color = rna_seq_val[,2])) + geom_point() # Plot showing the similarity between the original plot of PCs of only the training dataset
 
