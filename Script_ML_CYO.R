@@ -119,7 +119,11 @@ pca_ggplot <- data.frame(rna_seq_train[,2] , pca_rna_seq_train$x)
 colnames(pca_ggplot)[1] <- "sample_class"
 pca_ggplot[,1] <- as.factor(pca_ggplot[,1])
 
-pca_ggplot %>% ggplot(aes(x = PC1, y = PC2, color = sample_class)) + geom_point()  # Plot showing PC1 and PC2 of classes with good clustering
+pca_ggplot %>% ggplot(aes(x = PC1, y = PC2, color = sample_class)) +
+  geom_point() +
+  ggtitle(label = "Plot Of PC1 Versus PC2 For Training Dataset" ) +
+  xlab(label ="Principal Component 1") +
+  ylab(label = "Principal Component 2")  # Plot showing PC1 and PC2 of classes with good clustering
 
 
 pca_var <- pca_rna_seq_train$sdev^2 # Computes the variance of each PC
@@ -257,15 +261,13 @@ fit_lda <- train(sample_class ~ . , data = pca_rna_seq_train_80, method = "lda",
 
 pca_rna_seq_val <- predict(pca_rna_seq_train,newdata = rna_seq_val) #Transform validation set into similar pca parameters of the training set
 
-pca_rna_seq_val <- data.frame(rna_seq_val[,2] , pca_rna_seq_val[,1:min(which(cumsum(prop_var)> 0.8))] ) # removes the PC we are not interested in and adds the sample's classes to the data frame
-colnames(pca_rna_seq_val)[1] <- "sample_class" 
-colnames(pca_rna_seq_val)
+pca_rna_seq_val <- data.frame(pca_rna_seq_val[,1:min(which(cumsum(prop_var)> 0.8))] ) # removes the PC we are not interested in and adds the sample's classes to the data frame
 
-pca_rna_seq_val %>% ggplot(aes(x=PC1, y = PC2, color = sample_class)) + geom_point() # Plot showing the similarity between the original plot of PCs of only the training dataset
+pca_rna_seq_val %>% ggplot(aes(x=PC1, y = PC2, color = rna_seq_val[,2])) + geom_point() # Plot showing the similarity between the original plot of PCs of only the training dataset
 
 pred_val <- predict(fit_lda,pca_rna_seq_val) # Predicts the classes of validation set given the model that is fitted to the training dataset
 
-confusionMatrix(pred_val,pca_rna_seq_val[,1]) # Confusion matrix showing how well the model performs
+confusionMatrix(pred_val,rna_seq_val[,2]) # Confusion matrix showing how well the model performs
 
 # The model perfecly predicted the classes of the validation set.
 
