@@ -4,12 +4,13 @@ install.packages("caret")
 install.packages("R.utils")
 library(devtools)
 install_github("vqv/ggbiplot")
+install_github("eddelbuettel/rbenchmark")
 
 library(ggbiplot)
 library(tidyverse)
 library(caret)
 library(R.utils)
-
+library(rbenchmark)
 #############################################################
 ###   Creating the dataset for the Capstone CYO Project   ###
 #############################################################
@@ -30,6 +31,7 @@ colnames(myfile_labels_rows[1:2]) # Show the Change
 
 # Change the name of the file to rna_seq_dat, indicates the type of information
 # Add the Class of the labels to the data.csv
+
 rna_seq_dat <- data.frame(myfile_labels_rows) %>% left_join(myfile_data, by = "sample_number") # Adds the classes of the samples together with the rna seq data into one data frame
 dim(rna_seq_dat) # show that there are 801 rows and 20533 columns, 20531 genes is present
 
@@ -47,7 +49,7 @@ rna_seq_dat$Class <- as.factor(x = rna_seq_dat$Class) # Will add the Levels pres
 levels(rna_seq_dat$Class) # We now see the present levels, this will be the predictions the ML algorithm would need to predict given the predictors, in this case
                           # the genes' relative up- or downregulated readings.
 
-##############################################################################
+#############################################################################
 ###  Splitting the dataset into two groups, a training and validation set.  ##
 ##############################################################################
 set.seed(2019)
@@ -99,9 +101,12 @@ rna_seq_train %>% group_by(Class) %>%
   theme(legend.title.align = 0.5) +
   geom_jitter(alpha = 0.3, color = "dark blue")
 
-# As senn from the plots and the dataset, there is a lot of predictors, where many may not be predictive in any way
+# As seen from the plots and the dataset, there is a lot of predictors, where many may not have a great predictive power 
+
+##########################################################################################################################
 # Therefore a dimensionality reduction method will follow to remove those genes that may not be predictive or 
 # add to the variance of the data much. 
+
 
 pca_rna_seq_train <- prcomp(x = rna_seq_train[,3:ncol(rna_seq_train)], center = TRUE) # Performs a PCA analysis on all the genes present in the dataset
 
@@ -110,13 +115,17 @@ dim(pca_rna_seq_train$rotation) # Dimensions shows the amount of Principal Compo
 
 pca_rna_seq_train$x[1:5,1:7] # Shows the first few PCs
 
-plot(pca_rna_seq_train$x[,1:2], col=rna_seq_train[,2]) # Plot showing PC1 and PC2 with classes with somewhat good seperation between all the classes
+pca_ggplot <- data.frame(rna_seq_train[,2] , pca_rna_seq_train$x)
+colnames(pca_ggplot)[1] <- "sample_class"
+pca_ggplot[,1] <- as.factor(pca_ggplot[,1])
 
-plot(pca_rna_seq_train$x[,2:3], col=rna_seq_train[,2]) # similar plot with PC2 and PC3
+pca_ggplot %>% ggplot(aes(x = PC1, y = PC2, color = sample_class)) + geom_point()  # Plot showing PC1 and PC2 of classes with good clustering
+
 
 pca_var <- pca_rna_seq_train$sdev^2 # Computes the variance of each PC
 pca_var[1:10] # Shows the top 10 PC's variance
 
+#########################################################################################################################
 # For dimensionality reduction, we are interested in those PC's that inherently explains the most variance in the dataset
 # therefore we should determine a cutoff point for the amount of variance included by the PC's
 
@@ -133,16 +142,14 @@ min(which(cumsum(prop_var) > 0.8)) # The PC number where the total variance expl
 
 min(which(cumsum(prop_var) > 0.9)) # The PC number where the total variance explained equals 90%
 
-min(which(cumsum(prop_var) > 0.95)) # The PC number where the total variance explained equals 95 %
-
 ncol(pca_rna_seq_train$rotation) # Shows the total amount of PC's
 
 min(which(cumsum(prop_var) > 0.8))/ncol(pca_rna_seq_train$rotation) # proportion of predictors that explain 80 % of variance
 
 min(which(cumsum(prop_var) > 0.9))/ncol(pca_rna_seq_train$rotation) # proportion of predictors that explain 90% of variance
 
-min(which(cumsum(prop_var) > 0.95))/ncol(pca_rna_seq_train$rotation) # proportion of predictors that explain 95 % of variance
 
+########################################################################################################
 # The cutoff value of the total variance included by the PC's should be carefully decided.
 # We would like to include as much of the predictors as possible, while being effecient in using computer processing power
 # For 90% of the variance explained we reduce the predictors by aprox. a half while
@@ -151,24 +158,116 @@ min(which(cumsum(prop_var) > 0.95))/ncol(pca_rna_seq_train$rotation) # proportio
 # For training the ML algorithm, both the 80% and 90 % variance cutoff values will be used and 
 # accuracy measured.
 
-pca_rna_seq_train_80 <- data.frame(pca_rna_seq_train$x[,1:min(which(cumsum(prop_var)> 0.8))]) # Joins the classes of the samples with the respective
+pca_rna_seq_train_80 <- data.frame( rna_seq_train[,2],pca_rna_seq_train$x[,1:min(which(cumsum(prop_var)> 0.8))]) # Joins the classes of the samples with the respective
                                                                                                                 # PCs after the pca, for the 80% variance PCs.
 
-pca_rna_seq_train_90 <- data.frame(pca_rna_seq_train$x[,1:min(which(cumsum(prop_var) > 0.9))]) # same joining as above for the 90% variance PCs
+pca_rna_seq_train_90 <- data.frame( rna_seq_train[,2],pca_rna_seq_train$x[,1:min(which(cumsum(prop_var) > 0.9))]) # same joining as above for the 90% variance PCs
 
-classes <- as.factor(as.vector(rna_seq_train[,2]))
+colnames(pca_rna_seq_train_80)[1] <- "sample_class" # change column name to sample class
+colnames(pca_rna_seq_train_80)
 
-models <- c("adaboost","amdai","bayesglm","ada","gamboost",
-            "glmboost","rpart","vglmCumulative","bam","gam",
-            "glm","knn","svmLinear3","Ivq","lssvmLinear",
-            "lda","avNNet","naive_bayes","pls","Rborist")
 
-fitControl <- trainControl(method = "cv", number = 5 , p = 0.2)
+colnames(pca_rna_seq_train_90)[1] <- "sample_class"
+colnames(pca_rna_seq_train_90)
 
-set.seed(2020)
-fit_pca_80 <- train( x = pca_rna_seq_train_80, y = classes, method = "knn" , trControl = fitControl)
+models <- c("bayesglm", "rpart","knn","svmLinear3","lda","avNNet","naive_bayes","pls","snn","svmLinear","svmRadial") # Different models which will be trained
 
- 
+fitControl <- trainControl(method = "cv", number = 10 , p = 0.8) # Control ensuring a cross-validation of 10 times would be completed on the training set of 80%
+
+
+fits_80 <- lapply(models, function(models){
+  set.seed(2020)
+  print(models)
+  train(sample_class ~ . , data = pca_rna_seq_train_80, method = models , trControl = fitControl)
+})
+
+############################################################################################## 
+# Loop printing the associated Accuracy values for the different models
+
+method_80 <- matrix() # variable to store the methods
+acc_80 <- matrix() # Variable to store the accuracies
+
+for (x in 1:length(fits_80)) {
+  method_80[x] <- (fits_80[[x]][1]$method)
+  acc_80[x] <- (max(fits_80[[x]][4]$results$Accuracy))
+}
+acc_list_80 <- data.frame(method_80,acc_80)
+
+acc_list_80 %>% knitr::kable() # Shows the accuracies for each model
+
+
+# From the for loop it is seen that models svmLinear3 and lda had perfect accuracy
+# while knn, svmlinear and avNNet had very high accuracies
+# Therefore the svmlinear3 and lda models would be evaluated on the validation set
+
+################# Same fitting is done for the 90%variance training set
+
+fits_90 <- lapply(models, function(models){
+  set.seed(2020)
+  print(models)
+  train(sample_class ~ . , data = pca_rna_seq_train_90, method = models , trControl = fitControl)
+})
+
+# For the avNNEt model, the 90% variance set was too large
+#Could aslo see from the next printouts
+
+method_90 <- matrix()
+acc_90 <- matrix() 
+
+for (x in 1:length(fits_90)) {
+  method_90[x] <- (fits_90[[x]][1]$method)
+  acc_90[x] <- (max(fits_90[[x]][4]$results$Accuracy))
+  }
+acc_list_90 <- data.frame(method_90,acc_90)
+
+acc_list_90$acc_90[which(is.na(x = acc_list_90$acc_90))] = 0 # Changes the NA to 0 in the acc_list_90 set
+
+acc_list_90 %>% knitr::kable() # Shows the accuracies for each model
+
+# This piece of code evaluates if the more PC's dataset has better accuracies after the models have been trained.
+sum(acc_list_80$acc_80 > acc_list_90$acc_90) # counts how many models have higher accuracies on the 80% variance set than the 90% variance set.
+
+##########################################################################################################################################
+# The accuracies between the 80% and 90% variance sets did not give any indication why the 90% variance dataset that contains more predictors 
+# should be considered above the 80% variance training set. Therefore the 80% variance training models would be used for evaluating the accuracy
+# on the validation set.
+
+acc_list_80 %>% knitr::kable()
+
+# The svmLinear 3 and lda models were perfectly accurate after training.
+# The next consideration would be which model's computation time is the least.
+
+time_svmL <- benchmark(train(sample_class ~ . , data = pca_rna_seq_train_80 , method = "svmLinear3", trControl = fitControl , tuneGrid = expand.grid(cost = 0.25, Loss = 1)),
+                      columns = c("elapsed"), replications = 10) # runs the model fitting algorithm 10 times and records the time it takes to complete.
+
+# The expand grid best tune variables was used as was determined in the original fits_80 piece of code 
+# fits_80[[4]][6]
+
+time_lda <- benchmark(train(sample_class ~ . , data = pca_rna_seq_train_80, method = "lda" , trControl = fitControl), columns = c("elapsed"),replications = 10 )
+
+data.frame(time_svmL) %>% rbind(time_lda) # Shows that the computation time for lda is better
+
+
+fit_lda <- train(sample_class ~ . , data = pca_rna_seq_train_80, method = "lda",trControl = fitControl) # fit the best model chosen from the accuracy and time it takes to compute
+
+
+#############################################################################################################################################
+# The validation dataset should first be transformed into principal components which contains the same rotations as the training dataset.
+
+
+pca_rna_seq_val <- predict(pca_rna_seq_train,newdata = rna_seq_val) #Transform validation set into similar pca parameters of the training set
+
+pca_rna_seq_val <- data.frame(rna_seq_val[,2] , pca_rna_seq_val[,1:min(which(cumsum(prop_var)> 0.8))] ) # removes the PC we are not interested in and adds the sample's classes to the data frame
+colnames(pca_rna_seq_val)[1] <- "sample_class" 
+colnames(pca_rna_seq_val)
+
+pca_rna_seq_val %>% ggplot(aes(x=PC1, y = PC2, color = sample_class)) + geom_point() # Plot showing the similarity between the original plot of PCs of only the training dataset
+
+pred_val <- predict(fit_lda,pca_rna_seq_val) # Predicts the classes of validation set given the model that is fitted to the training dataset
+
+confusionMatrix(pred_val,pca_rna_seq_val[,1]) # Confusion matrix showing how well the model performs
+
+# The model perfecly predicted the classes of the validation set.
 
 
 
