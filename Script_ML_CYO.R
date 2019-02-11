@@ -72,9 +72,7 @@ nrow(rna_seq_val) + nrow(rna_seq_train) == nrow(rna_seq_dat) # Ensures no sample
 ###   Exploratory Data analysis   ##
 ####################################
 
-
-head(rna_seq_train$gene_44, n = 7) # The following code shows how the readings of the genes look like for different samples
-head(rna_seq_train$gene_1838, n =7)
+rna_seq_train[1:6,1:6] %>% knitr::kable() # Shows the first 6 rows and column of the training set
 
 #Plot showing the points and the the five number summary of the readings of gene_1, which may have some predictive power
 # Outliers are values that are further than 1.5 * ICR (Inter-quartile range) from the closest hinge
@@ -103,7 +101,7 @@ rna_seq_train %>% group_by(Class) %>%
   theme(legend.title.align = 0.5) +
   geom_jitter(alpha = 0.3, color = "dark blue")
 
-# As seen from the plots and the dataset, there is a lot of predictors, where many may not have a great predictive power 
+# As seen from the plots and the dataset, there is a lot of predictors, where many may not have great predictive power 
 
 ##########################################################################################################################
 # Therefore a dimensionality reduction method will follow to remove those genes that may not be predictive or 
@@ -118,14 +116,14 @@ dim(pca_rna_seq_train$rotation) # Dimensions shows the amount of Principal Compo
 pca_rna_seq_train$x[1:5,1:7] # Shows the first few PCs
 
 pca_ggplot <- data.frame(rna_seq_train[,2] , pca_rna_seq_train$x)
-colnames(pca_ggplot)[1] <- "sample_class"
+colnames(pca_ggplot)[1] <- "Cancer_Type"
 pca_ggplot[,1] <- as.factor(pca_ggplot[,1])
 
-pca_ggplot %>% ggplot(aes(x = PC1, y = PC2, color = sample_class)) +
+pca_ggplot %>% ggplot(aes(x = PC1, y = PC2, color = Cancer_Type)) +
   geom_point() +
   ggtitle(label = "Plot Of PC1 Versus PC2 For Training Dataset" ) +
   xlab(label ="Principal Component 1") +
-  ylab(label = "Principal Component 2")  # Plot showing PC1 and PC2 of classes with good clustering
+  ylab(label = "Principal Component 2") # Plot showing PC1 and PC2 of classes with good clustering
 
 
 pca_var <- pca_rna_seq_train$sdev^2 # Computes the variance of each PC

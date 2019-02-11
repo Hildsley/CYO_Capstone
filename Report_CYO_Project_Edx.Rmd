@@ -60,16 +60,140 @@ Many efforts are made to combat cancer, may it be to prevent tumour growth and s
 This collection of data is part of the RNA-Seq (HiSeq) PANCAN data set, it is a random extraction of gene expressions of patients having different types of tumours. Samples (instances of different patients) are stored row-wise. Variables (attributes) of each sample are RNA-Seq gene expression levels measured by an illumina HiSeq platform.
 
 The cancer types in the dataset:
+
 BRCA = Breast Invasive Carcinoma
+
 COAD = Colon Adenocarcinoma
+
 KIRC = Kidney Renal Clear Cell Carcinoma
+
 LUAD = Lung Adenocarcinoma
+
 PRAD = Prostate Adenocarcinoma
 
-The dataset contains 'r nrow(rna_seq_dat)' samples of patients and a total of 'r ncol(rna_seq_dat)-2' genes expression levels.
+The dataset contains `r nrow(rna_seq_dat)` samples of patients and a total of `r ncol(rna_seq_dat)` columns.
+
+The goal of this project is to build a Machine Learning algorithm which can identify which cancer type the gene expression levels of the unknown sample belongs to.
+
+The main steps in this report includes dimension reduction, which is necesarry due to the large number genes, and training a model to a training subset from which the model will learn and build a prediction algorithm to then predict which cancer type does the unknown sample belong to.
 
 #Analysis
 
+##Creating Datasets
+The Large dataset was divided into two subsets, a training and validation dataset. The training dataset will be used to build a model and the validation dataset will be used to test how good the model can predict the cancer type from the genes' relative expression levels.
+
+The Following code creates these two subsets:
+```{r test_val , echo=TRUE}
+set.seed(2019) # set a random number to ensure reproducibility of the data contained in the different datasets
+ind <- createDataPartition(y = rna_seq_dat$Class, times = 1,p = 0.2, list = FALSE)
+# creates the indexes for creating the training
+# and validation datasets, 20 % of the original dataset
+# will be allocated towards the validation set of samples.
+
+rna_seq_val <- rna_seq_dat[ind,]  # Splices out the validation samples from the original dataset 
+rna_seq_train <- rna_seq_dat[-ind,] # Splices out the training samples for ML from the original dataset
+```
+The following piece of code ensure no samples have been lost during the data partitioning step:
+```{r eval_row, echo=TRUE}
+nrow(rna_seq_val) + nrow(rna_seq_train) == nrow(rna_seq_dat)
+```
+
+##Evaluating Training Dataset
+The training set was investigated to determine exactly how the data looks like and what kind of techniques could be of use to build a machine learning model.
+The Following code shows the first few samples and genes' expression levels:
+```{r inv, echo=TRUE}
+rna_seq_train[1:6,1:6] %>% knitr::kable()
+
+```
+
+From the table it is clear that we have different types of cancer and then the gene expression levels in the following columns, which contains numeric values. The numeric values are of importance, escpecially due to the fact that dimensionality reduction methods could prove to be very important for these kind of data.
+
+The following graphs shows how different genes' expression levels vary and some not very much. This is important as many genes' expression levels may not inherently posses predictive power suitable for building a machine learniong algorithm.
+```{r graph, echo=FALSE}
+
+#Plot showing the points and the the five number summary of the readings of gene_1, which may have some predictive power
+# Outliers are values that are further than 1.5 * ICR (Inter-quartile range) from the closest hinge
+rna_seq_train %>% group_by(Class) %>% 
+  ggplot(aes(Class,gene_1)) + geom_boxplot (color = "red", fill = "dark red") + 
+  xlab(label = "Sample Type") +
+  ylab(label = "Average Reading For Gene 1") +
+  ggtitle(label = "Average Reading For The Different Samples For Gene 1" ) +
+  theme(legend.title.align = 0.5) +
+  geom_jitter(alpha = 0.3, color = "dark blue")
+
+# Plot showing how some genes' readings may have no predictive power 
+rna_seq_train %>% group_by(Class) %>% 
+  ggplot(aes(Class,gene_0)) + geom_boxplot (color = "red", fill = "dark red") + 
+  xlab(label = "Sample Type") +
+  ylab(label = "Average Reading For Gene 0") +
+  ggtitle(label = "Average Reading For The Different Samples For Gene 0" )
+
+#Plot showing the points and the the five number summary of the readings of gene_1072, which may have a good predictive power
+rna_seq_train %>% group_by(Class) %>% 
+  ggplot(aes(Class,gene_1072)) + geom_boxplot (color = "red", fill = "dark red") + 
+  xlab(label = "Sample Type") +
+  ylab(label = "Average Reading For Gene 1072") +
+  ggtitle(label = "Average Reading For The Different Samples For Gene 1072" ) +
+  theme(legend.title.align = 0.5) +
+  geom_jitter(alpha = 0.3, color = "dark blue")
+
+```
+
+The graphs show how the different genes' expression levels may have different degrees of predictive power. Therefore the genes that do not inherently have any predictive power should be removed.
+
+##Principal Component Analysis
+Principal component analysis (PCA) is a very powerful dimensionality reduction technique. This technique possibly reduces the dimensions of a dataset by including those components that adds variance to the data. Therefore dimensions that do not add variance to the data could be removed as they inherently do not contain any information. In the training dataset and the graphs above, it was shown that many genes' expression levels do not have much of a predictive power. Therefore it is expected that a PCA would reduce the dimensions to a high degree.
+
+The following code performs a PCA on the training dataset:
+```{r pca, echo=TRUE}
+pca_rna_seq_train <- prcomp(x = rna_seq_train[,3:ncol(rna_seq_train)], center = TRUE) # Performs a PCA analysis on all the genes present in the dataset
+
+str(pca_rna_seq_train) # Gives and indication of the structure and values after the pca analysis
+dim(pca_rna_seq_train$rotation) # Dimensions shows the amount of Principal Components, 20531 genes and 638 principal components
+
+pca_rna_seq_train$x[1:5,1:7] # Shows the first few PCs
+
+```
+
+The PCA reduced the predictors from an initial 20531 to `r ncol(pca_rna_seq_train$x)`. This is a much better size of predictors to work with and build a model.
+
+The following graph shows the PC1 and PC2 for the training dataset:
+```{r pca_graph, echo=TRUE}
+
+pca_ggplot <- data.frame(rna_seq_train[,2] , pca_rna_seq_train$x)
+colnames(pca_ggplot)[1] <- "Cancer_Type"
+pca_ggplot[,1] <- as.factor(pca_ggplot[,1])
+
+pca_ggplot %>% ggplot(aes(x = PC1, y = PC2, color = Cancer_Type)) +
+  geom_point() +
+  ggtitle(label = "Plot Of PC1 Versus PC2 For Training Dataset" ) +
+  xlab(label ="Principal Component 1") +
+  ylab(label = "Principal Component 2")  # Plot showing PC1 and PC2 of classes with good clustering
+
+```
+The PCA graph shows how the principal components could be used to explain the variance and shows clustering of the different cancer types. This graph shows that following a PCA, a model could be trained to predict cancer types given the different principal components.
+
+##Dimensionality Reduction
+Following the PCA, it was shown that the amount of predictors reduced significantly. The amount of dimensions could be reduced even further by looking at how much varaince do each principal component explain of the original dataset.
+
+The following plot shows the cumalative variance that is explained by the different principal components.
+```{r cumvar, echo=TRUE}
+pca_var <- pca_rna_seq_train$sdev^2 # Computes the variance of each PC
+prop_var <- pca_var/sum(pca_var) # calculates the proportion each PC adds to the total variance
+
+cumsum(prop_var[1:10]) # Shows the variance explained by the first ten PC's
+                      # We already see that the first 10 PC's explain about 55 % of the variance in the dataset
+
+plot(x = 1:length(prop_var), y = cumsum(prop_var), main = "Proportion Of Variance Explained By The Principal Components",
+                                                  xlab = "Principal Component Number",
+                                                  ylab = "Proportion Of Variance" ) # Plot showing how the different Principal components add to the total variance
+
+```
+
+The plot shows that the amount of predictors that inherently explain 90% of the variance are `r min(which(cumsum(prop_var) > 0.9))` and 80% variance are `r min(which(cumsum(prop_var) > 0.8))`. 
+
+The cutoff value of the total variance included by the PC's should be carefully decided. We would like to include as much of the predictors as possible, while being efficient in using computer processing power. For 90% of the variance explained we further reduced the predictors by aprox. a half while for 80% of the variance explained the predictors reduced to aprox. a fifth. Following this findings, both the 90% principal components and 80% principal components will be used to comparatively train a model.
+##Training The Model
 
 
 #Results
