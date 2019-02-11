@@ -193,6 +193,7 @@ plot(x = 1:length(prop_var), y = cumsum(prop_var), main = "Proportion Of Varianc
 The plot shows that the amount of predictors that inherently explain 90% of the variance are `r min(which(cumsum(prop_var) > 0.9))` and 80% variance are `r min(which(cumsum(prop_var) > 0.8))`. 
 
 The cutoff value of the total variance included by the PC's should be carefully decided. We would like to include as much of the predictors as possible, while being efficient in using computer processing power. For 90% of the variance explained we further reduced the predictors by aprox. a half while for 80% of the variance explained the predictors reduced to aprox. a fifth. Following this findings, both the 90% principal components and 80% principal components will be used to comparatively train a model.
+
 ##Training The Model
 
 
