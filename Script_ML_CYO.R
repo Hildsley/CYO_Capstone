@@ -1,12 +1,10 @@
-install.packages("devtools")
-install.packages("tidyverse")
-install.packages("caret")
-install.packages("R.utils")
+if (!require(devtools))install.packages("devtools")
+if (!require(tidyverse)) install.packages("tidyverse")
+if (!require(caret)) install.packages("caret")
+if (!require(R.utils)) install.packages("R.utils")
 library(devtools)
-install_github("vqv/ggbiplot")
 install_github("eddelbuettel/rbenchmark")
 
-library(ggbiplot)
 library(tidyverse)
 library(caret)
 library(R.utils)
@@ -15,12 +13,13 @@ library(rbenchmark)
 ###   Creating the dataset for the Capstone CYO Project   ###
 #############################################################
 
-download.file(url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00401/TCGA-PANCAN-HiSeq-801x20531.tar.gz",destfile = "Data/RNA_SeqData.tar.gz")  # Downloads the dataset
+download.file(url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00401/TCGA-PANCAN-HiSeq-801x20531.tar.gz",
+              destfile = "RNA_SeqData.tar.gz")  # Downloads the dataset
 
-untar(tarfile = "Data/RNA_SeqData.tar.gz",exdir = "Data/") #Unzips the dataset as was downloaded from uci
+untar(tarfile = "RNA_SeqData.tar.gz") #Unzips the dataset as was downloaded from uci
 
-myfile_data <- read_csv(file = "Data/TCGA-PANCAN-HiSeq-801x20531/data.csv") # reads the csv file from the data file in the folder, contains rna seq data
-myfile_labels_rows <- read_csv(file = "Data/TCGA-PANCAN-HiSeq-801x20531/labels.csv") # Reads the csv file that contains the information regarding the types of samples
+myfile_data <- read_csv(file = "TCGA-PANCAN-HiSeq-801x20531/data.csv") # reads the csv file from the data file in the folder, contains rna seq data
+myfile_labels_rows <- read_csv(file = "TCGA-PANCAN-HiSeq-801x20531/labels.csv") # Reads the csv file that contains the information regarding the types of samples
 
 colnames(myfile_data)[1] <- "sample_number" # Changes the X1 column name to sample_number
 colnames(myfile_data[1:5]) # Show the change
@@ -28,7 +27,8 @@ colnames(myfile_data[1:5]) # Show the change
 colnames(myfile_labels_rows)[1] <- "sample_number" # Changes the X1 column name to sample_number, same as myfile_data for tidying data later
 colnames(myfile_labels_rows[1:2]) # Show the Change
 
-
+unlink(x = "TCGA-PANCAN-HiSeq-801x20531",recursive = TRUE) # Remove the directory not needed anymore
+unlink("RNA_SeqData.tar.gz") # remove file not needed anymore
 # Change the name of the file to rna_seq_dat, indicates the type of information
 # Add the Class of the labels to the data.csv
 
@@ -37,6 +37,8 @@ dim(rna_seq_dat) # show that there are 801 rows and 20533 columns, 20531 genes i
 
 str(rna_seq_dat) # Gives the structure of the dataset
 head(rownames(rna_seq_dat), n = 5) # Shows the rows' names of first 10
+
+rm(myfile_data,myfile_labels_rows) # removes the objects not needed any more
 
 head(colnames(rna_seq_dat), n = 5) # Shows first 10 columns' names
 
@@ -211,9 +213,7 @@ fits_90 <- lapply(models, function(models){
   print(models)
   train(sample_class ~ . , data = pca_rna_seq_train_90, method = models , trControl = fitControl)
 })
-
 # For the avNNEt model, the 90% variance set was too large
-#Could aslo see from the next printouts
 
 method_90 <- matrix()
 acc_90 <- matrix() 
@@ -249,9 +249,10 @@ time_svmL <- benchmark(train(sample_class ~ . , data = pca_rna_seq_train_80 , me
 
 time_lda <- benchmark(train(sample_class ~ . , data = pca_rna_seq_train_80, method = "lda" , trControl = fitControl), columns = c("elapsed"),replications = 10 )
 
-data.frame(time_svmL) %>% rbind(time_lda) # Shows that the computation time for lda is better
-
-
+times <- data.frame(time_svmL) %>% rbind(time_lda)#  
+rownames(times) <- c("svmL","lda")                # Shows that the computation time for lda is better
+times                                             #
+  
 fit_lda <- train(sample_class ~ . , data = pca_rna_seq_train_80, method = "lda",trControl = fitControl) # fit the best model chosen from the accuracy and time it takes to compute
 
 

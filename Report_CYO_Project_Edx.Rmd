@@ -2,33 +2,38 @@
 title: "CYO Project Capstone Edx"
 author: "Hildsley Noome"
 date: "11 February 2019"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
 ---
 
 
 ```{r setup, include=FALSE}
+if(!require(knitr)) install.packages("knitr",repos = "http://cran.us.r-project.org")
+library(knitr)
+
 knitr::opts_chunk$set(echo = TRUE)
-install.packages("devtools")
-install.packages("tidyverse")
-install.packages("caret")
-install.packages("R.utils")
+if(!require(devtools)) install.packages("devtools")
+if (!require(tidyverse)) install.packages("tidyverse")
+if (!require(caret)) install.packages("caret")
+if (!require(R.utils)) install.packages("R.utils")
 library(devtools)
-install_github("vqv/ggbiplot")
 install_github("eddelbuettel/rbenchmark")
 
-library(ggbiplot)
 library(tidyverse)
 library(caret)
 library(R.utils)
 library(rbenchmark)
 
-download.file(url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00401/TCGA-PANCAN-HiSeq-801x20531.tar.gz",destfile = "Data/RNA_SeqData.tar.gz")  # Downloads the dataset
+download.file(url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00401/TCGA-PANCAN-HiSeq-801x20531.tar.gz",destfile = "RNA_SeqData.tar.gz")  # Downloads the dataset
 
-untar(tarfile = "Data/RNA_SeqData.tar.gz",exdir = "Data/") #Unzips the dataset as was downloaded from uci
+untar(tarfile = "RNA_SeqData.tar.gz") #Unzips the dataset as was downloaded from uci
 
-myfile_data <- read_csv(file = "Data/TCGA-PANCAN-HiSeq-801x20531/data.csv") # reads the csv file from the data file in the folder, contains rna seq data
-myfile_labels_rows <- read_csv(file = "Data/TCGA-PANCAN-HiSeq-801x20531/labels.csv") # Reads the csv file that contains the information regarding the types of samples
-
+myfile_data <- read_csv(file = "TCGA-PANCAN-HiSeq-801x20531/data.csv") # reads the csv file from the data file in the folder, contains rna seq data
+myfile_labels_rows <- read_csv(file = "TCGA-PANCAN-HiSeq-801x20531/labels.csv") # Reads the csv file that contains the information regarding the types of samples
+unlink(x = "TCGA-PANCAN-HiSeq-801x20531",recursive = TRUE)
+unlink("RNA_SeqData.tar.gz")
 colnames(myfile_data)[1] <- "sample_number" # Changes the X1 column name to sample_number
 
 colnames(myfile_labels_rows)[1] <- "sample_number" # Changes the X1 column name to sample_number, same as myfile_data for tidying data later
@@ -36,6 +41,7 @@ colnames(myfile_labels_rows)[1] <- "sample_number" # Changes the X1 column name 
 rna_seq_dat <- data.frame(myfile_labels_rows) %>% left_join(myfile_data, by = "sample_number")
 
 rna_seq_dat$Class <- as.factor(x = rna_seq_dat$Class)
+rm(myfile_data,myfile_labels_rows) # removes the objects not needed any more
 
 
 ```
@@ -49,16 +55,18 @@ Cells go through a cycle commonly refered to as mitosis. This cycle is important
 These mutations or DNA damage may be in a crucial area of the DNA which is responsible for growth and maintanence of cells. In this case these damages would lead to uncontrolled growth of cells and 
 a tumour may exist. Tumours that continue to grow uncontrollable and spread to different parts of the body is commonly refered to as cancer. Cancer causes approximately 8.5 million deaths per year.
 
-This collection of data is part of the RNA-Seq (HiSeq) PANCAN data set, it is a random extraction of gene expressions of patients having different types of tumor: BRCA, KIRC, COAD, LUAD and PRAD
-Samples (instances) are stored row-wise. Variables (attributes) of each sample are RNA-Seq gene expression levels measured by illumina HiSeq platform.
-Cancer Types:
-BRCA = Breast Invasive carcinoma
+Many efforts are made to combat cancer, may it be to prevent tumour growth and spread or increase life expectancy. Therefore any data related to cancer and tumour growth may be valuable and very informative.
+
+This collection of data is part of the RNA-Seq (HiSeq) PANCAN data set, it is a random extraction of gene expressions of patients having different types of tumours. Samples (instances of different patients) are stored row-wise. Variables (attributes) of each sample are RNA-Seq gene expression levels measured by an illumina HiSeq platform.
+
+The cancer types in the dataset:
+BRCA = Breast Invasive Carcinoma
 COAD = Colon Adenocarcinoma
-KIRC = Kidney Renal clear cell carcinoma
+KIRC = Kidney Renal Clear Cell Carcinoma
 LUAD = Lung Adenocarcinoma
-PRAD = Prostate adenocarcinoma
+PRAD = Prostate Adenocarcinoma
 
-
+The dataset contains 'r nrow(rna_seq_dat)' samples of patients and a total of 'r ncol(rna_seq_dat)-2' genes expression levels.
 
 #Analysis
 
