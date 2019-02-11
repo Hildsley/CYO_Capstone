@@ -195,9 +195,9 @@ The plot shows that the amount of predictors that inherently explain 90% of the 
 The cutoff value of the total variance included by the PC's should be carefully decided. We would like to include as much of the predictors as possible, while being efficient in using computer processing power. For 90% of the variance explained we further reduced the predictors by aprox. a half (`r min(which(cumsum(prop_var) > 0.9))/ncol(pca_rna_seq_train$rotation)`) while for 80% of the variance explained the predictors reduced to aprox. a fifth (`r min(which(cumsum(prop_var) > 0.8))/ncol(pca_rna_seq_train$rotation)`). Following this findings, both the 90% principal components and 80% principal components will be used to comparatively train a model.
 
 ##Training The Model
-Following the PCA, different models will be trained given the training dataset with the 80% and 90% variance principal components.
+Following the PCA, different models will be trained given the training dataset with the 80% and 90% variance principal components. The training will be done with 80% cross-validation sampling of the training set a total of 10 times.
 
-The following code will perform the training of 11 different models and print out the accuracies for the 80% variance set:
+The following code will perform the training of 10 different models and print out the accuracies for the 80% variance set:
 ```{r train_80, echo=TRUE}
 pca_rna_seq_train_80 <- data.frame( rna_seq_train[,2],pca_rna_seq_train$x[,1:min(which(cumsum(prop_var)> 0.8))])
 # Joins the classes of the samples with the respective
@@ -227,7 +227,7 @@ acc_list_80 <- data.frame(method_80,acc_80)
 acc_list_80 %>% knitr::kable() # Shows the accuracies for each model
 ```
 
-The following code will perform the training of 11 different models and report the accuracies for the 90% variance set:
+The following code will perform the training of 10 different models and report the accuracies for the 90% variance set:
 ```{r train_90, echo=TRUE}
 pca_rna_seq_train_90 <- data.frame( rna_seq_train[,2],pca_rna_seq_train$x[,1:min(which(cumsum(prop_var) > 0.9))]) # same joining as above for the 90% variance PCs
 
@@ -255,14 +255,74 @@ acc_list_90 %>% knitr::kable() # Shows the accuracies for each model
 The 80% variance set's models had similar accuracies to the 90% variance set, in fact `r sum(acc_list_80$acc_80 > acc_list_90$acc_90)` models had higher accuracies for the 80% variance set. The accuracies between the 80% and 90% variance sets did not give any indication why the 90% variance dataset that contains more predictors should be considered above the 80% variance training set. Therefore the 80% variance training models would be used for evaluating the accuracy on the validation set.
 
 ##Best Model
+The svmLinear 3 and lda models were perfectly accurate after training on the 80% variance training set. Choosing the best model would now depend on which model's computation time is the least. This may be very important when this dataset includes more training samples to build a better and expanded machine learning algorithm. For example if the modeling dataset in the future now expanded to include other cancer types as well, together with more patients' gene expression levels, this difference may become a very important factor to consider.
 
+The following code evaluates the time it takes training these models:
+```{r time_eval, echo=TRUE}
 
+time_svmL <- benchmark(train(sample_class ~ . , data = pca_rna_seq_train_80 , method = "svmLinear3", trControl = fitControl , tuneGrid = expand.grid(cost = 0.25, Loss = 1)),
+                      columns = c("elapsed"), replications = 10) # runs the model fitting algorithm 10 times and records the time it takes to complete.
+
+# The expand grid best tune variables was used as was determined in the original fits_80 piece of code 
+# fits_80[[4]][6]
+
+time_lda <- benchmark(train(sample_class ~ . , data = pca_rna_seq_train_80, method = "lda" , trControl = fitControl), columns = c("elapsed"),replications = 10 )
+
+times <- data.frame(time_svmL) %>% rbind(time_lda)#  
+rownames(times) <- c("svmL","lda")                # Shows that the computation time for lda is better
+times                                             #
+
+```
+
+Following the computation time for each model, it was shown that lda was more than twice as fast than svmLinear 3. The lda model would then be used as the best model to predict the cancer types of samples that is unknown.
 
 #Results
+The lda model that was trained was tested on a validation set which was completely seperate from the training set during the whole modelling phase.
+
+The following code trains the lda model on the training set:
+```{r train_lda, echo=TRUE}
+fit_lda <- train(sample_class ~ . , data = pca_rna_seq_train_80, method = "lda",trControl = fitControl)
+```
+
+The validation set that was seperate the whole modelling phase will now be prepared for validating the lda model. The validation set was not included in the PCA and therefore the values of each samples' principal components are unknown. The principal components of these samples will be fitted unto the PCA of the training set. It is important to notice that the original principal components do not change nor do we perform a PCA on the validation set. The validation set is being transformed to the same rotations and components of the original PCA so that we know where do these validation points lie in terms of the PCA that was already performed relative to those principal components.
+
+The following code performns the transformation of the validation set:
+```{r trans_val, echo=TRUE}
+
+pca_rna_seq_val <- predict(pca_rna_seq_train,newdata = rna_seq_val) #Transform validation set into similar pca parameters of the training set
+
+pca_rna_seq_val <- data.frame(pca_rna_seq_val[,1:min(which(cumsum(prop_var)> 0.8))] ) # removes the PCs we are not interested in and adds the sample's classes to the data frame
+
+```
+
+The following graph shows the principal component values of the validation set, relative to the training set's PCA.
+```{r gg_val, echo=TRUE}
+
+pca_rna_seq_val %>% ggplot(aes(x=PC1, y = PC2, color = rna_seq_val[,2])) +
+  geom_point() +
+  ggtitle(label = "PC1 versus PC2 Of The Validation Set Relative To The PCA Of Training Set") +
+  xlab(label = "PC1") +
+  ylab(label = "PC2")
+
+```
+
+This graph closely resembles that of the PC1 and PC2 of training set graph. From this graph one can easily see the clustering that is as expected following the PCA of the training set. The model will now be predicting the cancer types given the principal components of the validation set relative to the PCA of the training set.
+
+The following code performs the predictions and then prints out a confusion matrix:
+```{r pred, echo=TRUE}
+
+pred_val <- predict(fit_lda,pca_rna_seq_val) # Predicts the classes of validation set given the model that is fitted to the training dataset
+
+confusionMatrix(pred_val,rna_seq_val[,2]) # Confusion matrix showing how well the model performs
+
+```
 
 
 
 #Conclusion
+
+
+
 
 
 

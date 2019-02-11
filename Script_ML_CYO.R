@@ -249,7 +249,7 @@ times <- data.frame(time_svmL) %>% rbind(time_lda)#
 rownames(times) <- c("svmL","lda")                # Shows that the computation time for lda is better
 times                                             #
   
-fit_lda <- train(sample_class ~ . , data = pca_rna_seq_train_80, method = "lda",trControl = fitControl) # fit the best model chosen from the accuracy and time it takes to compute
+fit_lda <- train(sample_class ~ . , data = pca_rna_seq_train_80, method = "lda",trControl = fitControl) # fit the best model chosen
 
 
 #############################################################################################################################################
@@ -260,7 +260,12 @@ pca_rna_seq_val <- predict(pca_rna_seq_train,newdata = rna_seq_val) #Transform v
 
 pca_rna_seq_val <- data.frame(pca_rna_seq_val[,1:min(which(cumsum(prop_var)> 0.8))] ) # removes the PCs we are not interested in and adds the sample's classes to the data frame
 
-pca_rna_seq_val %>% ggplot(aes(x=PC1, y = PC2, color = rna_seq_val[,2])) + geom_point() # Plot showing the similarity between the original plot of PCs of only the training dataset
+pca_rna_seq_val %>% ggplot(aes(x=PC1, y = PC2, color = rna_seq_val[,2])) +
+  geom_point() +
+  ggtitle(label = "PC1 versus PC2 Of The Validation Set Relative To The PCA Of Training Set") +
+  xlab(label = "PC1") +
+  ylab(label = "PC2")
+  # Plot showing the similarity between the original plot of PCs of only the training dataset
 
 pred_val <- predict(fit_lda,pca_rna_seq_val) # Predicts the classes of validation set given the model that is fitted to the training dataset
 
