@@ -174,7 +174,7 @@ colnames(pca_rna_seq_train_80)
 colnames(pca_rna_seq_train_90)[1] <- "sample_class"
 colnames(pca_rna_seq_train_90)
 
-models <- c("bayesglm", "rpart","knn","svmLinear3","lda","avNNet","naive_bayes","pls","snn","svmLinear","svmRadial") # Different models which will be trained
+models <- c("bayesglm", "rpart","knn","svmLinear3","lda","naive_bayes","pls","snn","svmLinear","svmRadial") # Different models which will be trained
 
 fitControl <- trainControl(method = "cv", number = 10 , p = 0.8) # Control ensuring a cross-validation of 10 times would be completed on the training set of 80%
 
@@ -211,7 +211,7 @@ fits_90 <- lapply(models, function(models){
   print(models)
   train(sample_class ~ . , data = pca_rna_seq_train_90, method = models , trControl = fitControl)
 })
-# For the avNNEt model, the 90% variance set was too large
+
 
 method_90 <- matrix()
 acc_90 <- matrix() 
@@ -221,8 +221,6 @@ for (x in 1:length(fits_90)) {
   acc_90[x] <- (max(fits_90[[x]][4]$results$Accuracy))
   }
 acc_list_90 <- data.frame(method_90,acc_90)
-
-acc_list_90$acc_90[which(is.na(x = acc_list_90$acc_90))] = 0 # Changes the NA to 0 in the acc_list_90 set
 
 acc_list_90 %>% knitr::kable() # Shows the accuracies for each model
 
