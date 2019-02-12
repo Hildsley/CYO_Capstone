@@ -3,9 +3,10 @@ title: "CYO Project Capstone Edx"
 author: "Hildsley Noome"
 date: "11 February 2019"
 output:
+  word_document: default
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
 
 
@@ -181,9 +182,6 @@ The following plot shows the cumalative variance that is explained by the differ
 pca_var <- pca_rna_seq_train$sdev^2 # Computes the variance of each PC
 prop_var <- pca_var/sum(pca_var) # calculates the proportion each PC adds to the total variance
 
-cumsum(prop_var[1:10]) # Shows the variance explained by the first ten PC's
-                      # We already see that the first 10 PC's explain about 55 % of the variance in the dataset
-
 plot(x = 1:length(prop_var), y = cumsum(prop_var), main = "Proportion Of Variance Explained By The Principal Components",
                                                   xlab = "Principal Component Number",
                                                   ylab = "Proportion Of Variance" ) # Plot showing how the different Principal components add to the total variance
@@ -255,7 +253,7 @@ acc_list_90 %>% knitr::kable() # Shows the accuracies for each model
 The 80% variance set's models had similar accuracies to the 90% variance set, in fact `r sum(acc_list_80$acc_80 > acc_list_90$acc_90)` models had higher accuracies for the 80% variance set. The accuracies between the 80% and 90% variance sets did not give any indication why the 90% variance dataset that contains more predictors should be considered above the 80% variance training set. Therefore the 80% variance training models would be used for evaluating the accuracy on the validation set.
 
 ##Best Model
-The svmLinear 3 and lda models were perfectly accurate after training on the 80% variance training set. Choosing the best model would now depend on which model's computation time is the least. This may be very important when this dataset includes more training samples to build a better and expanded machine learning algorithm. For example if the modeling dataset in the future now expanded to include other cancer types as well, together with more patients' gene expression levels, this difference may become a very important factor to consider.
+The svmLinear 3 (L2 regularized support vector machine with linear kernel) and lda (linear discriminant analysis) models were perfectly accurate after training on the 80% variance training set. Choosing the best model would now depend on which model's computation time is the least. This may be very important when this dataset includes more training samples to build a better and expanded machine learning algorithm. For example if the modeling dataset in the future now expanded to include other cancer types as well, together with more patients' gene expression levels, this difference may become a very important factor to consider.
 
 The following code evaluates the time it takes training these models:
 ```{r time_eval, echo=TRUE}
@@ -317,12 +315,12 @@ confusionMatrix(pred_val,rna_seq_val[,2]) # Confusion matrix showing how well th
 
 ```
 
-
+Following the analysis of the predictions, the model perfectly predicted the cancer types of the validation step.
 
 #Conclusion
+The lda model perfectly predicted each cancer type from the validation step. This result is great since detection of cancer types may be very valuable, escpecially if one would like to allocate risk factors to different patients. One shortcoming though is that the information regarding the cancer types is quite limited. There was no specification of the stage these patients were at the time of the rna-seq. 
 
-
-
+The results confirm that it is possible to predict a cancer type from genes' expression levels and one may much earlier decide on the diagnosis of a specific patient without requiring more invasive methods to confirm the cancer type.
 
 
 
