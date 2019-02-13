@@ -321,6 +321,14 @@ The LDA model perfectly predicted each cancer type from the validation step. Thi
 
 The results confirm that it is possible to predict a cancer type from genes' expression levels and a physician may make an earlier diagnostic decision regarding a specific patient without requiring more invasive methods.
 
+#References
+1. "Cancer", _World Health Organization_, retrieved 13 February 2019, https://www.who.int/en/news-room/fact-sheets/detail/cancer.
+
+2. "What is Cancer", _National Cancer Institute_, retrieved 13 February 2019, https://www.cancer.gov/about-cancer/understanding/what-is-cancer.
+
+3. "Global, regional, and national life expectancy, all-cause mortality, and cause-specific mortality for 249 causes of death, 1980–2015: a systematic analysis for the Global Burden of Disease Study 2015", _Lancet _, 2016 Oct 8.
+
+4. "Lit of Cancer-types", _MAGI: Mutation Annotation & Genome Interpretation_, retreived 13 February 2019, http://magi.brown.edu/cancers.
 
 
 
