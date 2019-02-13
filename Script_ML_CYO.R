@@ -138,7 +138,7 @@ prop_var <- pca_var/sum(pca_var) # calculates the proportion each PC adds to the
 cumsum(prop_var[1:10]) # Shows the variance explained by the first ten PC's
                       # We already see that the first 10 PC's explain about 55 % of the variance in the dataset
 
-plot(x = 1:length(prop_var), y = cumsum(prop_var), main = "Proportion Of Variance Explained By The Principal Components",
+plot(x = 1:length(prop_var), y = cumsum(prop_var), main = "Proportion Of Variance Explained",
                                                   xlab = "Principal Component Number",
                                                   ylab = "Proportion Of Variance" ) # Plot showing how the different Principal components add to the total variance
 
@@ -262,7 +262,7 @@ pca_rna_seq_val <- data.frame(pca_rna_seq_val[,1:min(which(cumsum(prop_var)> 0.8
 
 pca_rna_seq_val %>% ggplot(aes(x=PC1, y = PC2, color = rna_seq_val[,2])) +
   geom_point() +
-  ggtitle(label = "PC1 versus PC2 Of The Validation Set Relative To The PCA Of Training Set") +
+  ggtitle(label = "PC1 versus PC2 Of The Validation Set") +
   xlab(label = "PC1") +
   ylab(label = "PC2")
   # Plot showing the similarity between the original plot of PCs of only the training dataset
