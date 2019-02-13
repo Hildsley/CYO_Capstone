@@ -49,17 +49,17 @@ rm(myfile_data,myfile_labels_rows) # removes the objects not needed any more
 
 #Introduction
 
-The human body is extraordinary in the sense that it exists out of billions of cells, where each cell maintains a balance with thousands of different pathways. The cells are able to communicate with each other even though they could be in completely different parts of the body. This complex interaction and pathways should be maintained while the cells grow.
+The human body is extraordinary in the sense that it exists out of billions of cells, where each cell maintains a balance with thousands of different pathways. The cells are able to communicate with each other even though they could be in completely different parts of the body. This complex interaction and pathways should be maintained while the cells grow^[2]^.
 
-Cells go through a cycle commonly referred to as mitosis. This cycle is important to ensure that cells can grow and replicate. During mitosis, it is crucial that the DNA is replicated for subsequent division of a single cell into two completely new cells. Often the replication pathways make errors in copying the DNA, but redundancy systems in the cell more often than not catch the error and correct it. If the error is missed, the new cell will carry this error in its DNA – known as DNA mutations or damage. 
+Cells go through a cycle commonly referred to as mitosis. This cycle is important to ensure that cells can grow and replicate. During mitosis, it is crucial that the DNA is replicated for subsequent division of a single cell into two completely new cells. Often the replication pathways make errors in copying the DNA, but redundancy systems in the cell more often than not catch the error and correct it. If the error is missed, the new cell will carry this error in its DNA – known as DNA mutations or damage^[1]^. 
 
-DNA mutations or damage may be in a crucial area of the DNA which is responsible for growth and maintenance of cells. In this case, damage would lead to uncontrolled growth of cells and a tumour may develop. Tumours that continue to grow uncontrollably and spread to different parts of the body are commonly referred to as cancer. Cancer causes approximately 8.5 million deaths per year.
+DNA mutations or damage may be in a crucial area of the DNA which is responsible for growth and maintenance of cells. In this case, damage would lead to uncontrolled growth of cells and a tumour may develop. Tumours that continue to grow uncontrollably and spread to different parts of the body are commonly referred to as cancer^[3,4]^. Cancer causes approximately 8.5 million deaths per year^[5]^.
 
 There are several intervention types to combat cancer. A common intervention is to surgically remove the tumour to prevent further growth and/or spreading and could lead to a better prognosis. Therefore any data related to cancer and tumour growth may be valuable and informative for diagnostic and prognosis purposes.
 
-This collection of data is part of the RNA-Seq (HiSeq) PANCAN data set, it is a random extraction of gene expressions of patients having different types of tumours. Samples (instances of different patients) are stored row-wise. Variables (attributes) of each sample are RNA-Seq gene expression levels measured by an Illumina HiSeq platform.
+This collection of data is part of the RNA-Seq (HiSeq) PANCAN data set, it is a random extraction of gene expressions of patients having different types of tumours. Samples (instances of different patients) are stored row-wise. Variables (attributes) of each sample are RNA-Seq gene expression levels measured by an Illumina HiSeq platform^[7,8]^.
 
-The cancer types in the dataset:
+The cancer types in the dataset^[6]^:
 
 BRCA = Breast Invasive Carcinoma
 
@@ -322,13 +322,25 @@ The LDA model perfectly predicted each cancer type from the validation step. Thi
 The results confirm that it is possible to predict a cancer type from genes' expression levels and a physician may make an earlier diagnostic decision regarding a specific patient without requiring more invasive methods.
 
 #References
-1. "Cancer", _World Health Organization_, retrieved 13 February 2019, https://www.who.int/en/news-room/fact-sheets/detail/cancer.
+1.  "The cell cycle: a review of regulation, deregulation and therapeutic targets in cancer", _Cell Prolif. 2003, 36, 131–149_, Katrien Vermeulen, Dirk R. Van Bockstaele and Zwi N. Berneman,
+Faculty of Medicine, Laboratory of Experimental Hematology, University of Antwerp, Antwerp University Hospital,Edegem, Belgium
 
-2. "What is Cancer", _National Cancer Institute_, retrieved 13 February 2019, https://www.cancer.gov/about-cancer/understanding/what-is-cancer.
+2. "The biology of cancer stem cells", _Annu. Rev. Cell Dev. Biol. 2007. 23:675–99_, Neethan A. Lobo^1^^2^, Dalong Qian^2^, Yohei Shimono^2^ and Michael F. Clarke^2^
 
-3. "Global, regional, and national life expectancy, all-cause mortality, and cause-specific mortality for 249 causes of death, 1980–2015: a systematic analysis for the Global Burden of Disease Study 2015", _Lancet _, 2016 Oct 8.
+   ^1^Cellular and Molecular Biology Program, University of Michigan, Ann Arbor, Michigan 48109; email: nlobo@umich.edu
 
-4. "Lit of Cancer-types", _MAGI: Mutation Annotation & Genome Interpretation_, retreived 13 February 2019, http://magi.brown.edu/cancers.
+   ^2^Institute for Stem Cell Biology and Regenerative Medicine, Stanford University,Palo Alto, California 94304; email: yshimono@stanford.edu, dqian@stanford.edu, mfclarke@stanford.edu
 
+3. "Cancer", _World Health Organization_, retrieved 13 February 2019, https://www.who.int/en/news-room/fact-sheets/detail/cancer.
+
+4. "What is Cancer", _National Cancer Institute_, retrieved 13 February 2019, https://www.cancer.gov/about-cancer/understanding/what-is-cancer.
+
+5. "Global, regional, and national life expectancy, all-cause mortality, and cause-specific mortality for 249 causes of death, 1980–2015: a systematic analysis for the Global Burden of Disease Study 2015", _Lancet _, 2016 Oct 8.
+
+6. "List of Cancer-types", _MAGI: Mutation Annotation & Genome Interpretation_, retreived 13 February 2019, http://magi.brown.edu/cancers.
+
+7. "The Cancer Genome Atlas Pan-Cancer analysis project", _Nat Genet. 2013 Oct;45(10)_, Cancer Genome Atlas Research Network1, Weinstein JN, Collisson EA, Mills GB, Shaw KR, Ozenberger BA, Ellrott K, Shmulevich I, Sander C, Stuart JM.
+
+8. UCI Machine Learning Repository [http://archive.ics.uci.edu/ml], Dua, D. and Karra Taniskidou, E. (2017), Irvine, CA: University of California, School of Information and Computer Science. 
 
 
