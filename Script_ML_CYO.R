@@ -80,7 +80,7 @@ rna_seq_train %>% group_by(Class) %>%
   ggplot(aes(Class,gene_1)) + geom_boxplot (color = "red", fill = "dark red") + 
   xlab(label = "Sample Type") +
   ylab(label = "Average Reading For Gene 1") +
-  ggtitle(label = "Average Reading For The Different Samples For Gene 1" ) +
+  ggtitle(label = "Average Reading The Different Samples For Gene 1" ) +
   theme(legend.title.align = 0.5) +
   geom_jitter(alpha = 0.3, color = "dark blue")
   
@@ -90,14 +90,14 @@ rna_seq_train %>% group_by(Class) %>%
   ggplot(aes(Class,gene_0)) + geom_boxplot (color = "red", fill = "dark red") + 
   xlab(label = "Sample Type") +
   ylab(label = "Average Reading For Gene 0") +
-  ggtitle(label = "Average Reading For The Different Samples For Gene 0" )
+  ggtitle(label = "Average Reading For Different Samples For Gene 0" )
   
 #Plot showing the points and the the five number summary of the readings of gene_1072, which may have a good predictive power
 rna_seq_train %>% group_by(Class) %>% 
   ggplot(aes(Class,gene_1072)) + geom_boxplot (color = "red", fill = "dark red") + 
   xlab(label = "Sample Type") +
   ylab(label = "Average Reading For Gene 1072") +
-  ggtitle(label = "Average Reading For The Different Samples For Gene 1072" ) +
+  ggtitle(label = "Average Reading For Different Samples For Gene 1072" ) +
   theme(legend.title.align = 0.5) +
   geom_jitter(alpha = 0.3, color = "dark blue")
 
