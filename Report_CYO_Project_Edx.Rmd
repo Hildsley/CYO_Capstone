@@ -12,20 +12,16 @@ output:
 
 ```{r setup, include=FALSE}
 if(!require(knitr)) install.packages("knitr",repos = "http://cran.us.r-project.org")
-library(knitr)
-
 knitr::opts_chunk$set(echo = TRUE)
 if(!require(devtools)) install.packages("devtools")
 if (!require(tidyverse)) install.packages("tidyverse")
+if(!require(data.table)) install.packages("data.table")
 if (!require(caret)) install.packages("caret")
 if (!require(R.utils)) install.packages("R.utils")
 library(devtools)
 install_github("eddelbuettel/rbenchmark")
-
-library(tidyverse)
-library(caret)
-library(R.utils)
 library(rbenchmark)
+
 
 download.file(url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00401/TCGA-PANCAN-HiSeq-801x20531.tar.gz",destfile = "RNA_SeqData.tar.gz")  # Downloads the dataset
 

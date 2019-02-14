@@ -1,14 +1,11 @@
 if (!require(devtools))install.packages("devtools")
 if (!require(tidyverse)) install.packages("tidyverse")
+if(!require(data.table)) install.packages("data.table")
 if (!require(caret)) install.packages("caret")
 if (!require(R.utils)) install.packages("R.utils")
-library(devtools)
 install_github("eddelbuettel/rbenchmark")
 
-library(tidyverse)
-library(caret)
-library(R.utils)
-library(rbenchmark)
+
 #############################################################
 ###   Creating the dataset for the Capstone CYO Project   ###
 #############################################################
@@ -29,6 +26,8 @@ colnames(myfile_labels_rows[1:2]) # Show the Change
 
 unlink(x = "TCGA-PANCAN-HiSeq-801x20531",recursive = TRUE) # Remove the directory not needed anymore
 unlink("RNA_SeqData.tar.gz") # remove file not needed anymore
+
+##################################################################
 # Change the name of the file to rna_seq_dat, indicates the type of information
 # Add the Class of the labels to the data.csv
 
