@@ -110,7 +110,7 @@ rna_seq_train %>% group_by(Class) %>%
 
 pca_rna_seq_train <- prcomp(x = rna_seq_train[,3:ncol(rna_seq_train)], center = TRUE) # Performs a PCA analysis on all the genes present in the dataset
 
-str(pca_rna_seq_train) # Gives and indication of the structure and values after the pca analysis
+str(pca_rna_seq_train) # Gives an indication of the structure and values after the pca analysis
 dim(pca_rna_seq_train$rotation) # Dimensions shows the amount of Principal Components, 20531 genes and 638 principal components
 
 pca_rna_seq_train$x[1:5,1:7] # Shows the first few PCs

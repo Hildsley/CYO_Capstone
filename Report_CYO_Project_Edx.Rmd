@@ -53,7 +53,7 @@ The human body is extraordinary in the sense that it exists out of billions of c
 
 Cells go through a cycle commonly referred to as mitosis. This cycle is important to ensure that cells can grow and replicate. During mitosis, it is crucial that the DNA is replicated for subsequent division of a single cell into two completely new cells. Often the replication pathways make errors in copying the DNA, but redundancy systems in the cell more often than not catch the error and correct it. If the error is missed, the new cell will carry this error in its DNA – known as DNA mutations or damage^[1]^. 
 
-DNA mutations or damage may be in a crucial area of the DNA which is responsible for growth and maintenance of cells. In this case, damage would lead to uncontrolled growth of cells and a tumour may develop. Tumours that continue to grow uncontrollably and spread to different parts of the body are commonly referred to as cancer^[3,4]^. Cancer causes approximately 8.5 million deaths per year^[5]^.
+DNA mutations or damage may be in a crucial area of the DNA which is responsible for growth and maintenance of cells. In this case, the damage would lead to uncontrolled growth of cells and a tumour may develop. Tumours that continue to grow uncontrollably and spread to different parts of the body are commonly referred to as cancer^[3,4]^. Cancer causes approximately 8.5 million deaths per year^[5]^.
 
 There are several intervention types to combat cancer. A common intervention is to surgically remove the tumour to prevent further growth and/or spreading and could lead to a better prognosis. Therefore any data related to cancer and tumour growth may be valuable and informative for diagnostic and prognosis purposes.
 
@@ -106,7 +106,7 @@ rna_seq_train[1:6,1:6] %>% knitr::kable()
 
 ```
 
-From the table it is clear that we have different types of cancer and then the gene expression levels in the following columns, which contains numeric values. The numeric values are of importance, especially due to the fact that dimensionality reduction methods could prove to be very important for this kind of data.
+From the table, it is clear that we have different types of cancer and then the gene expression levels in the following columns, which contains numeric values. The numeric values are of importance, especially due to the fact that dimensionality reduction methods could prove to be very important for this kind of data.
 
 The following graphs show how different genes' expression levels vary significantly. This is important as many genes' expression levels may not inherently possess predictive power suitable for building a machine learning algorithm.
 ```{r graph, echo=FALSE}
@@ -148,7 +148,7 @@ The following code performs a PCA on the training dataset:
 ```{r pca, echo=TRUE}
 pca_rna_seq_train <- prcomp(x = rna_seq_train[,3:ncol(rna_seq_train)], center = TRUE) # Performs a PCA analysis on all the genes present in the dataset
 
-str(pca_rna_seq_train) # Gives and indication of the structure and values after the pca analysis
+str(pca_rna_seq_train) # Gives an indication of the structure and values after the pca analysis
 dim(pca_rna_seq_train$rotation) # Dimensions shows the amount of Principal Components, 20531 genes and 638 principal components
 
 pca_rna_seq_train$x[1:5,1:7] # Shows the first few PCs
@@ -171,10 +171,11 @@ pca_ggplot %>% ggplot(aes(x = PC1, y = PC2, color = Cancer_Type)) +
   ylab(label = "Principal Component 2")  # Plot showing PC1 and PC2 of classes with good clustering
 
 ```
+
 The PCA graph shows how the principal components could be used to explain the variance and identifies clustering of the different cancer types. This graph shows that following a PCA, a model could be trained to predict cancer types given the different principal components.
 
 ##Dimensionality Reduction
-Following the PCA, it was shown that the number of predictors reduced significantly. The amount of dimensions could be reduced even further by looking at how much variance each principal component explains of the original dataset.
+Following the PCA, it was shown that the number of predictors reduced significantly. The number of dimensions could be reduced even further by looking at how much variance each principal component explains of the original dataset.
 
 The following plot shows the cumulative variance that is explained by the different principal components.
 ```{r cumvar, echo=TRUE}
@@ -189,7 +190,7 @@ plot(x = 1:length(prop_var), y = cumsum(prop_var), main = "Proportion Of Varianc
 
 The plot shows that the amount of predictors that inherently explain 90% of the variance are `r min(which(cumsum(prop_var) > 0.9))` and 80% variance are `r min(which(cumsum(prop_var) > 0.8))`. 
 
-The cutoff value of the total variance included by the PC's should be carefully decided. We would like to include as much of the predictors as possible, while being efficient in using computer processing power. For 90% of the variance explained we further reduced the predictors by approx. a half (`r min(which(cumsum(prop_var) > 0.9))/ncol(pca_rna_seq_train$rotation)`) while for 80% of the variance explained the predictors reduced to approx. a fifth (`r min(which(cumsum(prop_var) > 0.8))/ncol(pca_rna_seq_train$rotation)`). Following these findings, both the 90% principal components and 80% principal components will be used to comparatively train a model.
+The cutoff value of the total variance included by the PC's should be carefully decided. We would like to include as much of the predictors as possible while being efficient in using computer processing power. For 90% of the variance explained we further reduced the predictors by approx. a half (`r min(which(cumsum(prop_var) > 0.9))/ncol(pca_rna_seq_train$rotation)`) while for 80% of the variance explained the predictors reduced to approx. a fifth (`r min(which(cumsum(prop_var) > 0.8))/ncol(pca_rna_seq_train$rotation)`). Following these findings, both the 90% principal components and 80% principal components will be used to comparatively train a model.
 
 ##Training The Model
 Following the PCA, different models will be trained given the training dataset with the 80% and 90% variance datasets. The training will be done with 80% cross-validation sampling of the training set a total of 10 times.
@@ -249,10 +250,10 @@ acc_list_90 %>% knitr::kable() # Shows the accuracies for each model
 
 ```
 
-The 80% variance set's models had similar accuracies to the 90% variance set, in fact `r sum(acc_list_80$acc_80 > acc_list_90$acc_90)` models had higher accuracies for the 80% variance set. The accuracies between the 80% and 90% variance sets did not give any indication why the 90% variance dataset that contains more predictors should be considered above the 80% variance training set. Therefore the 80% variance training models would be used for evaluating the accuracy on the validation set.
+The 80% variance set's models had similar accuracies to the 90% variance set, in fact, `r sum(acc_list_80$acc_80 > acc_list_90$acc_90)` models had higher accuracies for the 80% variance set. The accuracies between the 80% and 90% variance sets did not give any indication why the 90% variance dataset that contains more predictors should be considered above the 80% variance training set. The 90% variance dataset cumsumes more processing power as well and therefore the 80% variance training models would be used for evaluating the accuracy on the validation set.
 
 ##Best Model
-The svmLinear 3 (L2 regularized support vector machine with the linear kernel) and LDA (linear discriminant analysis) models were perfectly accurate after training on the 80% variance training set. Choosing the best model would now depend on which model's computation time is the least. This may be very important when this dataset includes more training samples to build a better and expanded machine learning algorithm. For example if the modelling dataset in the future now expanded to include other cancer types as well, together with more patients' gene expression levels, this difference may become a very important factor to consider.
+The svmLinear 3 (L2 regularized support vector machine with the linear kernel) and LDA (linear discriminant analysis) models were perfectly accurate after training on the 80% variance training set. Choosing the best model would now depend on which model's computation time is the least. This may be very important when this dataset includes more training samples to build a better and expanded machine learning algorithm. For example, if the modelling dataset in the future now expanded to include other cancer types as well, together with more patients' gene expression levels, this difference may become a very important factor to consider.
 
 The following code evaluates the time it takes training these models:
 ```{r time_eval, echo=TRUE}
@@ -303,7 +304,7 @@ pca_rna_seq_val %>% ggplot(aes(x=PC1, y = PC2, color = rna_seq_val[,2])) +
 
 ```
 
-This graph closely resembles that of the PC1 and PC2 of the training set graph. From this graph one can easily see the clustering that is as expected following the PCA of the training set. The model will now be predicting the cancer types given the principal components of the validation set relative to the PCA of the training set.
+This graph closely resembles that of the PC1 and PC2 of the training set graph. From this graph, one can easily see the clustering that is as expected following the PCA of the training set. The model will now be predicting the cancer types given the principal components of the validation set relative to the PCA of the training set.
 
 The following code performs the predictions and then prints out a confusion matrix:
 ```{r pred, echo=TRUE}
@@ -326,10 +327,8 @@ The results confirm that it is possible to predict a cancer type from genes' exp
 Faculty of Medicine, Laboratory of Experimental Hematology, University of Antwerp, Antwerp University Hospital,Edegem, Belgium
 
 2. "The biology of cancer stem cells", _Annu. Rev. Cell Dev. Biol. 2007. 23:675–99_, Neethan A. Lobo^1^^2^, Dalong Qian^2^, Yohei Shimono^2^ and Michael F. Clarke^2^
-
-   ^1^Cellular and Molecular Biology Program, University of Michigan, Ann Arbor, Michigan 48109; email: nlobo@umich.edu
-
-   ^2^Institute for Stem Cell Biology and Regenerative Medicine, Stanford University,Palo Alto, California 94304; email: yshimono@stanford.edu, dqian@stanford.edu, mfclarke@stanford.edu
+^1^Cellular and Molecular Biology Program, University of Michigan, Ann Arbor, Michigan 48109; email: nlobo@umich.edu
+^2^Institute for Stem Cell Biology and Regenerative Medicine, Stanford University,Palo Alto, California 94304; email: yshimono@stanford.edu, dqian@stanford.edu, mfclarke@stanford.edu
 
 3. "Cancer", _World Health Organization_, retrieved 13 February 2019, https://www.who.int/en/news-room/fact-sheets/detail/cancer.
 
